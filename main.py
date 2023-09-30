@@ -1,5 +1,6 @@
 from register import Register
 from order import Order
+from blockchain import Blockchain
 import time
 import qrcode
 
@@ -7,38 +8,41 @@ print("Welcome to SUPPLY CHAIN MANAGEMENT\n\n")
 print("Few instructions and assumptions made:\n")
 print("Products pid=[1,2,3,4,5,6,7,8,9,10,11,12] are manufactured by the manufacturer")
 print("Manufacturer automatically dispatches item to distributor while chosing 5: Send item")
+print("\n")
 
 reg=Register()
 ord= Order()
+blk=Blockchain()
+blk.initiategenesisblock()
 orderCnt=5001
+
 
 while True:
     print(
        """ 
 Select any one of the following : 
-    1 : Add transactions
-    2 : Register
-    3 : Add block onto blockchain 
-    4 : Buy a product (Consumer Request) 
-    5 : Send item (dist -> client)
-    6 : View Product Status (QR Code)
-    7 : View Pending orders
-    8 : Resolve Conflict (Consumer/Distributor Complaint)  
-    9 : View profile
-    10 : Exit
+    1 : Register
+    2 : Add block onto blockchain 
+    3 : Buy a product (Client Request) 
+    4 : Deliver item (dist -> client)
+    5 : View Product Status (QR Code)
+    6 : View Pending orders
+    7 : Resolve Conflict (Client/Distributor Complaining about delivery of products)  
+    8 : View profile
+    9 : Exit
 
-      """
-      )
+"""
+)
     choice = input("Enter your choice: ")
-    if choice=='10':
+    if choice=='9':
         print("\nProject Done by Group 15:\nSuman Sekhar Sahoo (2021A7PS2605H)")      
         break
+
     elif choice=='1':
-        pass
-    elif choice=='2':
-        print("C: Consumer\nD: Distributor\nM: Manufacturer\nNOTE: There can be only 1 manufacturer\n")
+        print("\nREGISTER\n")
+        print("C: Client\nD: Distributor\nM: Manufacturer\nNOTE: There can be only 1 manufacturer\n")
         utype= input("Enter user type (C/D/M): ")
-        if utype=='C':
+        if utype.upper()=='C':
             x=int(input("Enter user_id: "))
             if reg.checkId(x) ==-1:
                 print("User already exists")
@@ -50,7 +54,7 @@ Select any one of the following :
                 else:
                     print("Insufficient amount to register")
 
-        elif utype=='D':
+        elif utype.upper()=='D':
             x=int(input("Enter user_id: "))
             if reg.checkId(x) ==-1:
                 print("User already exists")
@@ -61,7 +65,7 @@ Select any one of the following :
                 else:
                     print("Insufficient amount to register")
         
-        elif utype=='M':
+        elif utype.upper()=='M':
             x=int(input("Enter user_id: "))
             if len(reg.manufId)>0:
                 print("Manufacturer already exists")
@@ -74,116 +78,184 @@ Select any one of the following :
         else:
             print("Invalid User Type")
 
-    elif choice=='3':
-        pass
+    elif choice=='2':
+        if len(blk.pendingTranac)<3:
+            print("Minimum 3 Pending transactions required to start adding block to Blockchain")
+        
 
-    elif choice=='4':
+    elif choice=='3':
         if len(reg.manufId)==0:
             print("No manufacturer registered yet! Can't buy any product")
         else:
             if len(reg.distbId)==0:
                 print("No distributors registered yet! Can't deliver products")
             else:
-                buyer_id= int(input("Enter ConsumerId: "))
+                print("\nBUY A PRODUCT (FOR CLIENTS)\n")
+                buyer_id= int(input("Enter ClientID: "))
                 if buyer_id not in reg.consumerId:
-                    print("ConsumerId not found!")
+                    print("ClientID not found!")
                 else:
                     print("Products pid=[1,2,3,4,5,6,7,8,9,10,11,12] are manufactured by the manufacturer")
                     prid= int(input("Enter product ID: "))
                     if prid not in range(1,13):
                         print("Product not found!")
                     else:
-                        otime= time.time()
-                        ord.newOrder(buyer_id,prid,otime,orderCnt)
-                        print(f"Order orderId: {orderCnt} sucessfully placed")
-                        orderCnt+=1
+                        print("List of all Distributors available (Not Busy delivering any other order): ")
+                        avDistb=[]
+                        for i in reg.distbId:
+                            if i not in ord.distbBusy:
+                                avDistb.append(i)
+                                print(i)
+                        db=int(input("Enter distbID: "))
+                        if db not in avDistb:
+                            print("Distb not availlable")
+                        else:
+                            otime= time.time()
+                            ord.newOrder(buyer_id,prid,db,otime,orderCnt)
+                            print(f"Order orderId: {orderCnt} sucessfully placed with DistributorID {db}")
+                            orderCnt+=1
 
-    elif choice=='5':
+    elif choice=='4':
         if len(reg.manufId)==0:
             print("No manufacturer registered yet!")
         else:
             if len(reg.distbId)==0:
                 print("No distributor registered yet!")
             else:
+                print("\nDELIVER A PRODUCT (FOR DISTRIBUTORS)\n")
                 ord.printIncompleteOrders()
                 did=int(input("Enter distributer ID: "))
-                if did not in reg.distbId:
-                    print("Distributer not found!")
+                if did not in ord.distbBusy:
+                    print("No pending orders to be delivered by you")
                 else:
-                    oid=int(input("Enter OrderID that you want to deliver: "))
-                    if oid not in ord.orders:
-                        print("OrderID not found!")
-                    else:
-                        ord.orderDelivered(oid,did,reg.manufId[0],time.time())
-                        print(f"OrderId {oid} of Product pid: {ord.orders[oid][1]} delivered to consumerId: {ord.orders[oid][0]} by Distributor Id: {did}")
+                    odid=ord.distbBusy[did]
+                    print(f"You have a pending order orderID {odid} of ProductID:{ord.orders[odid][1]} for clientID {ord.orders[ord.distbBusy[did]][0]}")
+                    conf=input("Deliver the product? (Y/N): ")
+                    if conf.upper()=='Y':
+                        ord.orderDelivered(odid,did,reg.manufId[0],time.time())
+                        transaction=[]
+                        transaction.append(f"DistributorID {did} received product from ManufacturerID {reg.manufId[0]} at {ord.shipped[odid][2]}")
+                        transaction.append(f"DistributorID {did} dispatched at {ord.shipped[odid][2]}")
+                        transaction.append(f"ClientID received product at {ord.shipped[odid][2]}")
+                        blk.pendingTranac.append(transaction)
+                        print(f"Order (orderID: {odid}) successfully delivered to clientID {ord.orders[odid][0]}")
+                    elif conf.upper()=='N':
+                        print("Order still pending to be delivered by you! You cannot undertake any other orders until this ordered is delivered!")
                         
                             
-            
-    elif choice=='6':
+    elif choice=='5':
         if len(ord.orders)==0:
             print("No orders placed yet!")
         else:
-
+            print("\nVIEW PRODUCT STATUS (QR CODE)\n")
             ord.printAllOrders()
-            oid= int(input("Enter order ID: "))
+            oid= int(input("Enter OrderID: "))
             if oid not in ord.orders:
                 print("OrderID not found!")
             else:
-                if ord.orders[oid][3]==False:
+                if ord.orders[oid][4]==False:
                     order_status_msg=f"""
-OrderID: {oid}
-
-ConsumerId {ord.orders[oid][0]} ordered ProductID pid: {ord.orders[oid][1]} at {time.ctime(ord.orders[oid][2])}
-
-Product not yet dispatched by manufacturer
-
+OrderID: {oid}\n
+ClientID {ord.orders[oid][0]} ordered ProductID pid: {ord.orders[oid][1]} at {time.ctime(ord.orders[oid][3])}\n
+Order was placed with DistributorID: {ord.orders[oid][2]}\n
+Product not yet delivered by Distributor
 """
                     img=qrcode.make(order_status_msg)
                     img.save(f"qr{oid}.png")
                     print(f"QR generated with filename: qr{oid}.png")
                 else:
                     order_status_msg=f"""
-OrderID: {oid}
-
-ConsumerID {ord.orders[oid][0]} ordered ProductID pid: {ord.orders[oid][1]} at {time.ctime(ord.orders[oid][2])}
-
-ManufacturerID {reg.manufId[0]} sent product to DistributorID {ord.shipped[oid][0]} at {time.ctime(ord.shipped[oid][2])}
-
-Distributor {ord.shipped[oid][0]} delivered product to consumer {ord.orders[oid][0]} at {time.ctime(ord.shipped[oid][2])}
-
+OrderID: {oid}\n
+ClientID {ord.orders[oid][0]} ordered ProductID pid: {ord.orders[oid][1]} at {time.ctime(ord.orders[oid][3])}\n
+ManufacturerID {reg.manufId[0]} sent product to DistributorID {ord.shipped[oid][0]} at {time.ctime(ord.shipped[oid][2])}\n
+Distributor {ord.shipped[oid][0]} delivered product to ClientID {ord.orders[oid][0]} at {time.ctime(ord.shipped[oid][2])}
 """
                     img=qrcode.make(order_status_msg)
                     img.save(f"qr{oid}.png")
                     print(f"QR generated with filename: qr{oid}.png")
+
+    elif choice=='6':
+        if len(ord.distbBusy)==0:
+            print("No pending orders to be delivered!")
+        else:
+            print("\nVIEW PENDING DELIVERY LIST\n")
+            ord.printIncompleteOrders()
+
+    elif choice=='7':
+        print("COMPLAINT PORTAL\n")
+        cid=int(input("Enter ClientID: "))
+        if cid not in reg.consumerId:
+            print("ClientID not found!")
+        else:
+            print("List of orders placed by you:")
+            corders=[]
+            for i in ord.orders:
+                if ord.orders[i][0]==cid:
+                    corders.append(i)
+                    print(f"OrderID: {i} placed with DistributorID: {ord.orders[i][2]}")
+            if len(corders)==0:
+                print("No orders placed by you!")
+            else:
+                ordid=int(input("Enter OrderID from the above list: "))
+                if ordid not in corders:
+                    print("Invalid orderID")
+                else:
+                    print(f"Your Complaint: OrderID {ordid} not deliverd yet by DistributorID {ord.orders[ordid][2]}")
+                    distbcomp=input(f"DistributorID {ord.orders[ordid][2]}, do you claim to have delivered the product? (Y/N): ")
+                    if distbcomp.upper()=='N':
+                        print("Distributor agrees that he didn't deliver the product")
+                    elif distbcomp.upper()=='Y':
+                        print("Distributor claims he has delivered the product\n\n")
+                        if ord.orders[ordid][4]==True:
+                            print("THE LIAR IS: Client")
+                            reg.stakes[cid]-=50
+                            print("You have been penalized! Your stakes has been deducted by 50")
+                            if reg.stakes[cid]<50:
+                                reg.consumerId.remove(cid)
+                                reg.userId.remove(cid)
+                                del reg.stakes[cid]
+                                print("Since your updated stake balance < 50, you have been kicked out of the Blockchain system!")
+                        
+                        else:
+                            print("THE LIAR IS: Distributor")
+                            reg.stakes[ord.orders[ordid][2]]-=50
+                            print("You have been penalized! Your stakes has been deducted by 50")
+                            if reg.stakes[ord.orders[ordid][2]]<50:
+                                reg.distbId.remove(ord.orders[ordid][2])
+                                reg.userId.remove(ord.orders[ordid][2])
+                                del reg.stakes[ord.orders[ordid][2]]
+                                print("Since your updated stake balance < 50, you have been kicked out of the Blockchain system!")
 
     elif choice=='8':
-        x=int(input("Enter consumerID: "))
-        if x not in reg.consumerId:
-            print("UserID not found")
+        if len(reg.userId)==0:
+            print("No users registered yet!")
         else:
-            ord.printAllOrders()
-            o=int(input("Enter orderID: "))
-            if ord.orders[o][0]!=x:
-                print("Invalid orderID")
+            print("\nVIEW PROFILE\n")
+            uid=int(input("Enter UserID: "))
+            if uid not in reg.userId:
+                print("UserID does not exixts!")
             else:
-                print("Your complaint: You didn't receive product but distributor claims to have delivered the product")
-                y= int(input("Enter DistributorID (that claims to have delivered product): "))
-                if y in reg.distbId:
-                    print("Invalid DistributorID")
+                if uid in reg.consumerId:
+                    print("User Type: CLIENT")
+                    print("Orders placed:",end=" ")
+                    for i in ord.orders:
+                        if ord.orders[i][0]==uid:
+                            print(i,end=", ")
+                    print(" ")
+
+                elif uid in reg.distbId:
+                    print("User Type: DISTRIBUTOR")
+                    print("Orders delivered (OrderID):",end=" ")
+                    for i in ord.shipped:
+                        if ord.shipped[i][0]==uid:
+                            print(i,end=", ")
+                    print(" ")
+                    for i in ord.orders:
+                        if ord.orders[i][2]==uid and ord.orders[i][4]==False:
+                            print(f"Pending Order (OrderID): {i}")
                 else:
-                    print("Your complaint: You claim to have deliverd the product but consumer denies delivery\n\n")
-                    if ord.orders[o][3]==True and ord.shipped[0]==y:
-                        reg.stakes[x]-=100
-                        print("Consumer lied about not receiving the product! Consumer has been penalised (amount 100 deducted from deposit)")
-                        print(f"Updated stake of consumerID {x}= {reg.stakes[x]}")
-                    elif ord.orders[o][3]==False:
-                        reg.stakes[y]-=100
-                        print("Distributor lied about having delivered the product! Distributor has been penalised (amount 100 deducted from deposit)")
-                        print(f"Updated stake of distributorID {x}= {reg.stakes[y]}")
-
-
-
-
+                    print("User Type: MANUFACTURER")
+                print(f"Stake: {reg.stakes[uid]}")
 
     else:
         print("Invalid Choice!")
