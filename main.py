@@ -102,7 +102,7 @@ Select any one of the following :
             for i in range(len(blk.pendingTranac)//3):
                 blk.addblock(time.time(),blkproducer)
                 totalBlockReward+=50
-            print(f"Total reward to produce {noOfBlocks} blocks is {totalBlockReward}")
+            print(f"Total reward to produce {noOfBlocks} block(s) is {totalBlockReward}")
             print("The reward will be distributed to the userIDs that elected the blockproducer in proportion of their stake in the pool\n")
             for i in stakeWeights:
                 reg.stakes[i]+=totalBlockReward*stakeWeights[i]
