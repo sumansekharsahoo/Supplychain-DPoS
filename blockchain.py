@@ -47,6 +47,7 @@ class Blockchain:
     hash: {blk['hash']}
 ]
 """
+        print("Genesis Block:\n")
         print(blk_msg)
 
     def addblock(self,tstamp,blkproducer):
@@ -72,6 +73,7 @@ class Blockchain:
     hash: {blk['hash']}
 ]
 """
+        print("Block added: \n")
         print(blk_msg)
     
     def createHash(self,index,mkroot,timestmp,prevhash):
@@ -113,6 +115,18 @@ class Blockchain:
         print(f"UserID with highest total vote stake: {winner}. UserID: {winner} is chosen as the blockproducer\n")
         return winner, stakeWeights
         
+    def printBlock(self,blk):
+        blk_msg=f"""
+[
+    index: {blk['index']},
+    merkleroot: {blk['merkleroot']},
+    timestamp: {blk['timestamp']},
+    prevhash: {blk['prevhash']},
+    blockproducer_signature:{blk['blockproducer_signature']}
+    hash: {blk['hash']}
+]
+"""
+        print(f"\n{blk_msg}")
 
 
         
