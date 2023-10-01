@@ -13,7 +13,7 @@ print("\n")
 reg=Register()
 ord= Order()
 blk=Blockchain()
-blk.initiategenesisblock()
+blk.initiategenesisblock(time.time())
 orderCnt=5001
 
 
@@ -81,7 +81,19 @@ Select any one of the following :
     elif choice=='2':
         if len(blk.pendingTranac)<3:
             print("Minimum 3 Pending transactions required to start adding block to Blockchain")
-        
+        else:
+            blkproducer,stakeWeights=blk.delegatedProofOfStake(reg.userId,reg.stakes)
+            totalBlockReward=0
+            noOfBlocks=len(blk.pendingTranac)//3
+            for i in range(len(blk.pendingTranac)//3):
+                blk.addblock(time.time(),blkproducer)
+                totalBlockReward+=50
+            print(f"Total reward to produce {noOfBlocks} blocks is {totalBlockReward}")
+            print("The reward will be distributed to the userIDs that elected the blockproducer in proportion of their stake in the pool\n")
+            for i in stakeWeights:
+                reg.stakes[i]+=totalBlockReward*stakeWeights[i]
+                print(f"userID {i} rewarded with amt: {totalBlockReward*stakeWeights[i]}")
+
 
     elif choice=='3':
         if len(reg.manufId)==0:
@@ -100,20 +112,25 @@ Select any one of the following :
                     if prid not in range(1,13):
                         print("Product not found!")
                     else:
-                        print("List of all Distributors available (Not Busy delivering any other order): ")
                         avDistb=[]
                         for i in reg.distbId:
                             if i not in ord.distbBusy:
                                 avDistb.append(i)
-                                print(i)
-                        db=int(input("Enter distbID: "))
-                        if db not in avDistb:
-                            print("Distb not availlable")
+                        if len(avDistb)==0:
+                            print("Sorry no distributors currently available!")
                         else:
-                            otime= time.time()
-                            ord.newOrder(buyer_id,prid,db,otime,orderCnt)
-                            print(f"Order orderId: {orderCnt} sucessfully placed with DistributorID {db}")
-                            orderCnt+=1
+                            print("List of all Distributors available (Not Busy delivering any other order): ")
+                            for i in avDistb:
+                                print(i)
+
+                            db=int(input("Enter distbID: "))
+                            if db not in avDistb:
+                                print("Distb not availlable")
+                            else:
+                                otime= time.time()
+                                ord.newOrder(buyer_id,prid,db,otime,orderCnt)
+                                print(f"Order orderId: {orderCnt} sucessfully placed with DistributorID {db}")
+                                orderCnt+=1
 
     elif choice=='4':
         if len(reg.manufId)==0:

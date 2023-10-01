@@ -3,7 +3,7 @@ import random
 
 class Blockchain:
     def __init__(self):
-        self.allTransac=[]
+        self.verifiedTransac=[]
         self.pendingTranac=[] #pending to be added to blockchain
         self.chain=[]
 
@@ -36,7 +36,7 @@ class Blockchain:
             'blockproducer_signature':'0',
             'hash':'0',
         }
-        self.chain.push(blk)
+        self.chain.append(blk)
         blk_msg=f"""
 [
     index: {blk['index']},
@@ -47,6 +47,7 @@ class Blockchain:
     hash: {blk['hash']}
 ]
 """
+        print(blk_msg)
 
     def addblock(self,tstamp,blkproducer):
         merkleroot=self.merkletree(self.pendingTranac[0],self.pendingTranac[1],self.pendingTranac[2])
@@ -58,7 +59,9 @@ class Blockchain:
             'blockproducer_signature':self.blockproducerSignature(blkproducer,tstamp),
             'hash':self.createHash(len(self.chain)+1,merkleroot,tstamp,self.chain[len(self.chain)-1]['hash'])
         }
-        self.chain.push(blk)
+        self.chain.append(blk)
+        for i in range(3):
+            self.verifiedTransac.append(self.pendingTranac.pop(0))
         blk_msg=f"""
 [
     index: {blk['index']},
@@ -82,8 +85,10 @@ class Blockchain:
     def delegatedProofOfStake(self,userlist,stakes):  
         print("Electing the block producer...\n")
         votedFor={}
+
+        #For each userID, we are putting random vote to some userID
         for i in range(len(userlist)):
-            votedFor[userlist[i]]=userlist[random.randint(0,len(userlist)-1)]
+            votedFor[userlist[i]]=userlist[random.randint(0,len(userlist)-1)] 
             print(f"UserID: {userlist[i]} voted for {votedFor[userlist[i]]}")
         totalVoteStake={}
         for i in userlist:
@@ -99,8 +104,14 @@ class Blockchain:
                 maxv=totalVoteStake[i]
                 winner=i
         
+        stakeWeights={}
+        for i in votedFor:
+            if votedFor[i]==winner:
+                stakeWeights[i]=stakes[i]/totalVoteStake[winner]
+
+        
         print(f"UserID with highest total vote stake: {winner}. UserID: {winner} is chosen as the blockproducer\n")
-        return winner
+        return winner, stakeWeights
         
 
 
