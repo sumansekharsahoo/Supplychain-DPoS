@@ -94,11 +94,11 @@ The function here returns the BlockProducer ID and the proportion of stake the v
 
 used to store user information (ID, stakes)
 
-- **userId**: stores list of all users
-- **distbId**: stores list of all distributors
-- **consumerId**: stores list of all Clients
+- **userId**: stores list of all registered users
+- **distbId**: stores list of all registered distributors
+- **consumerId**: stores list of all registered Clients
 - **manufId**: contains list (only 1 element allowed) of manufacturer
-- **stakes**: a dictionary contains userId as key and their stake as valuse
+- **stakes**: a dictionary contains userId as key and their stake as value
 - **checkId()**: function used to check if a userId is registered
 - **addConsumer()**: function initializes a client with appropriate values
 - **addDistb()**: function initializes a distributor with appropriate values
