@@ -96,10 +96,12 @@ class Blockchain:
     # The weight of his vote is given by the stakes he owns. The user that has received maximum stakes as vote is elected as the Block Producer. 
     # The reward for producing a block (50) is then distributed among the user that voted in favor of the Block producer. Distribution is done in proportion of the stake they pooled.
     #The function here returns the BlockProducer ID and the proportion of stake the voter (of BlockProducer) pooled. These values are used in main.py to update stakes of the users.
-    def delegatedProofOfStake(self,userlist,stakes):  
+    def delegatedProofOfStake(self,userlist,stakes,holdingsince,tmstmp):  
         print("Electing the block producer...\n")
         votedFor={}
-
+        coinage={}
+        for i in holdingsince:
+            coinage[i]=stakes[i]*(tmstmp-holdingsince[i])//120
         #For each userID, we are putting random vote to some userID
         for i in range(len(userlist)):
             votedFor[userlist[i]]=userlist[random.randint(0,len(userlist)-1)] 
@@ -109,7 +111,7 @@ class Blockchain:
             vs=0
             for j in votedFor:
                 if votedFor[j]==i:
-                    vs+=stakes[j]
+                    vs+=coinage[j]
             totalVoteStake[i]=vs
         maxv=-1
         winner=-1
@@ -121,7 +123,7 @@ class Blockchain:
         stakeWeights={}
         for i in votedFor:
             if votedFor[i]==winner:
-                stakeWeights[i]=stakes[i]/totalVoteStake[winner]
+                stakeWeights[i]=coinage[i]/totalVoteStake[winner]
 
         
         print(f"UserID with highest total vote stake: {winner}. UserID: {winner} is chosen as the blockproducer\n")

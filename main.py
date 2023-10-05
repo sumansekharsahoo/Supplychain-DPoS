@@ -24,6 +24,7 @@ orderCnt=5001
 blk.initiategenesisblock(time.time())
 
 
+
 while True:
     #Menu of actions
     print(
@@ -64,7 +65,7 @@ Select any one of the following :
                     #amt must be >=50 otherwise client not allowed to register
                     y=int(input("Enter amount (min 50 for registering) Your stake will be amount-50 : "))
                     if y>=50:
-                        reg.addConsumer(x,y-50)
+                        reg.addConsumer(x,y-50,time.time())
                         # print(*reg.consumerId)
                     else:
                         print("Insufficient amount to register")
@@ -76,7 +77,7 @@ Select any one of the following :
                 else:
                     y=int(input("Enter amount (min 50 for registering) Your stake will be amount-50 : "))
                     if y>=50:
-                        reg.addDistb(x,y-50)
+                        reg.addDistb(x,y-50,time.time())
                     else:
                         print("Insufficient amount to register")
             
@@ -89,7 +90,7 @@ Select any one of the following :
                         print("User already exists")
                     else:
                         y=int(input("Enter amount (The whole amount will be your stake): "))
-                        reg.addManuf(x,y)
+                        reg.addManuf(x,y,time.time())
             else:
                 print("Invalid User Type")
             ag=input("\nRegister more users? (Y/N):")
@@ -108,7 +109,7 @@ Select any one of the following :
             print("Minimum 3 Pending transactions required to start adding block to Blockchain")
         else:
             #Electing the blockproducer and finding reward ratio for all users that voted for the winner(i.e, (person(i) stake)/ (total stake pool for winner))
-            blkproducer,stakeWeights=blk.delegatedProofOfStake(reg.userId,reg.stakes)
+            blkproducer,stakeWeights=blk.delegatedProofOfStake(reg.userId,reg.stakes,reg.holdingsince,time.time())
             #reward for adding 1 block= 50
             totalBlockReward=0
             noOfBlocks=len(blk.pendingTranac)//3
@@ -120,6 +121,7 @@ Select any one of the following :
             #totalBlockReward*stakeWeight[i] would give us the reward that the voter would receive
             for i in stakeWeights:
                 reg.stakes[i]+=totalBlockReward*stakeWeights[i]
+                reg.holdingsince[i]=time.time()
                 print(f"userID {i} rewarded with amt: {totalBlockReward*stakeWeights[i]}")
 
     elif choice=='3':
@@ -307,6 +309,7 @@ Distributor {ord.shipped[oid][0]} delivered product to ClientID {ord.orders[oid]
                                 reg.consumerId.remove(cid)
                                 reg.userId.remove(cid)
                                 del reg.stakes[cid]
+                                del reg.holdingsince[cid]
                                 print("Since your updated stake balance < 50, you have been kicked out of the Blockchain system!")
                         
                         #LIAR IS DISTRIBUTOR
@@ -320,6 +323,7 @@ Distributor {ord.shipped[oid][0]} delivered product to ClientID {ord.orders[oid]
                                 reg.distbId.remove(ord.orders[ordid][2])
                                 reg.userId.remove(ord.orders[ordid][2])
                                 del reg.stakes[ord.orders[ordid][2]]
+                                del reg.holdingsince[ord.orders[ordid][2]]
                                 print("Since your updated stake balance < 50, you have been kicked out of the Blockchain system!")
 
     elif choice=='9':
@@ -353,6 +357,7 @@ Distributor {ord.shipped[oid][0]} delivered product to ClientID {ord.orders[oid]
                 else:
                     print("User Type: MANUFACTURER")
                 print(f"Stake: {reg.stakes[uid]}")
+                print(f"Coinage: {reg.stakes[uid]*(time.time()-reg.holdingsince[uid])//120}")
 
     else:
         print("Invalid Choice!")
