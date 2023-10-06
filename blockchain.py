@@ -124,6 +124,7 @@ class Blockchain:
         for i in votedFor:
             if votedFor[i]==winner:
                 stakeWeights[i]=coinage[i]/totalVoteStake[winner]
+            stakeWeights[winner]=coinage[winner]/totalVoteStake[winner]
 
         
         print(f"UserID with highest total vote stake: {winner}. UserID: {winner} is chosen as the blockproducer\n")

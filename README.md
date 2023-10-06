@@ -8,6 +8,7 @@ The project aims at solving problems in Supply Chain with the help of Blockchain
 - Yash Pandey (2021A8PS3194H)
 - Anmol Agarwal (2021A4PS3068H)
 - Sharan K (2021A8PS1537H)
+- Ritish Sachdeva (2020B3A71862H)
 
 ## Technology Used:
 
