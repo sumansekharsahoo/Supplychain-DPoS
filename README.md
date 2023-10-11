@@ -2,13 +2,7 @@
 
 The project aims at solving problems in Supply Chain with the help of Blockchain technology. Consensus algorithm used: Delegated Proof of Stake (DPoS)
 
-## Group 15
-
 - [Suman Sekhar Sahoo](https://www.github.com/sumansekharsahoo) (2021A7PS2605H)
-- Yash Pandey (2021A8PS3194H)
-- Anmol Agarwal (2021A4PS3068H)
-- Sharan K (2021A8PS1537H)
-- Ritish Sachdeva (2020B3A71862H)
 
 ## Technology Used:
 
